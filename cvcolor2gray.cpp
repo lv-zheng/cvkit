@@ -7,12 +7,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	kit::handle img(argv);
+	kit::handle img(argv[1]);
 
 	char methodc = argv[3][0];
 	img.to_gray(methodc);
 
-	img.save();
+	img.save(argv[2]);
 
 	return 0;
 }
