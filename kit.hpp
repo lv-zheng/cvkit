@@ -8,10 +8,10 @@
 namespace kit {
 
 struct handle {
-	handle(char **argv) {
+	handle(char **argv, cv::ImreadModes flags = cv::IMREAD_COLOR) {
 		filein = argv[1];
 		fileout = argv[2];
-		img = cv::imread(filein);
+		img = cv::imread(filein, flags);
 		if (!img.data)
 			throw std::runtime_error("fail to read image");
 	}
