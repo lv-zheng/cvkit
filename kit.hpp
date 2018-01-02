@@ -50,6 +50,9 @@ struct handle {
 	void edge_neglap();
 	void edge_canny(double thres);
 
+	void bin_erode(const cv::Mat& rhs);
+	void bin_dilate(const cv::Mat& rhs);
+
 	cv::Mat img;
 };
 

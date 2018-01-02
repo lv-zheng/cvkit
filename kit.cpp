@@ -528,7 +528,6 @@ void handle::edge_canny(double thres)
 				angle -= 8 * pi8;
 			if (angle < -4 * pi8)
 				angle += 8 * pi8;
-			std::cout << angle << std::endl;
 			if (angle <= -3 * pi8 || angle > 3 * pi8) {
 				pos1x = i + 1;
 				pos2x = i - 1;
@@ -568,6 +567,60 @@ void handle::edge_canny(double thres)
 	}
 
 	img = res;
+}
+
+void handle::bin_erode(const cv::Mat& rhs)
+{
+	if (img.rows < rhs.rows || img.cols < rhs.cols)
+		throw std::runtime_error("too small image for erosion");
+
+	cv::Mat dst(cv::Size(img.cols + 1 - rhs.cols, img.rows + 1 - rhs.rows), CV_8UC1);
+
+	for (int i = 0; i < dst.rows; ++i) {
+		for (int j = 0; j < dst.cols; ++j) {
+			bool black = false;
+			for (int x = 0; x < rhs.rows; ++x) {
+				for (int y = 0; y < rhs.cols; ++y) {
+					if (rhs.at<uchar>(x, y) && !img.at<uchar>(i + x, j + y)) {
+						black = true;
+						goto finish;
+					}
+				}
+			}
+finish:
+			dst.at<uchar>(i, j) = (black ? 0 : 255);
+		}
+	}
+
+	img = dst;
+}
+
+void handle::bin_dilate(const cv::Mat& rhs)
+{
+	if (img.rows < rhs.rows || img.cols < rhs.cols)
+		throw std::runtime_error("too small image for erosion");
+
+	cv::Mat dst(cv::Size(img.cols + rhs.cols - 1, img.rows + rhs.rows - 1), CV_8UC1);
+
+	for (int i = 0; i < dst.rows; ++i) {
+		for (int j = 0; j < dst.cols; ++j)
+			dst.at<uchar>(i, j) = 0;
+	}
+
+	for (int i = 0; i < img.rows; ++i) {
+		for (int j = 0; j < img.cols; ++j) {
+			if (!img.at<uchar>(i, j))
+				continue;
+			for (int x = 0; x < rhs.rows; ++x) {
+				for (int y = 0; y < rhs.cols; ++y) {
+					if (rhs.at<uchar>(x, y))
+						dst.at<uchar>(i + x, j + y) = 255;
+				}
+			}
+		}
+	}
+
+	img = dst;
 }
 
 } // namespace kit
