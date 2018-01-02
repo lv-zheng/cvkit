@@ -1,11 +1,12 @@
 CXXFLAGS = -g -Wall -std=c++14
-LDLIBS = -lstdc++ -lm -lopencv_core -lopencv_imgcodecs
+LDLIBS = -lstdc++ -lm -lopencv_core -lopencv_imgcodecs -lopencv_highgui
 
 CXX=g++
 
 all: cvcolor2gray cvthreshold_otsu cvarith cvhistogram \
 		cvscale cvequal \
-		cvblur cvedge
+		cvblur cvedge \
+		cvshow
 
 cvcolor2gray: cvcolor2gray.o kit.o
 
@@ -22,3 +23,5 @@ cvequal: cvequal.o kit.o
 cvblur: cvblur.o kit.o
 
 cvedge: cvedge.o kit.o
+
+cvshow: cvshow.o kit.o
