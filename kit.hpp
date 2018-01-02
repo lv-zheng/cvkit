@@ -38,6 +38,8 @@ struct handle {
 
 	void scale(double cols, double rows, bool bilinear);
 
+	void equalize(int lo, int hi);
+
 	cv::Mat img;
 };
 

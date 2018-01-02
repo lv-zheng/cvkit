@@ -10,7 +10,7 @@ static inline double limit01(double v)
 	return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
-static inline uchar limit0255(int v)
+static inline uchar limit0255(long v)
 {
 	return v < 0 ? 0 : v > 255 ? 255 : v;
 }
@@ -274,6 +274,16 @@ void handle::scale(double cols, double rows, bool bilinear)
 	}
 
 	img = dst;
+}
+
+void handle::equalize(int lo, int hi)
+{
+	assert(img.type() == CV_8UC1);
+	assert(lo != hi);
+
+	uchar *p = img.data;
+	for (int i = 0; i < img.cols * img.rows; ++i)
+		p[i] = limit0255(std::round((double) (p[i] - lo) / (hi - lo) * 255));
 }
 
 } // namespace kit
