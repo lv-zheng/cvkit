@@ -365,27 +365,34 @@ static std::vector<std::vector<double>> get_gauss_matrix(double sigma)
 	return res;
 }
 
-void handle::blur_gauss(double sigma)
+static cv::Mat apply_mat(const cv::Mat img, const std::vector<std::vector<double>> mat)
 {
 	assert(img.type() == CV_8UC1);
-	assert(3 * sigma >= 1);
 
 	cv::Mat dst = img.clone();
-
-	auto gmat = get_gauss_matrix(sigma);
-	int radius = gmat.size() / 2;
+	int radius = mat.size() / 2;
 
 	for (int i = 0; i < img.rows; ++i) {
 		for (int j = 0; j < img.cols; ++j) {
 			double value = 0;
 			for (int x = -radius; x <= radius; ++x)
 				for (int y = -radius; y <= radius; ++y)
-					value += gmat[x + radius][y + radius] * at_ranged_scale(img, i + x, j + y);
+					value += mat[x + radius][y + radius] * at_ranged_scale(img, i + x, j + y);
 			dst.at<uchar>(i, j) = limit0255(std::round(value));
 		}
 	}
 
-	img = dst;
+	return dst;
+}
+
+void handle::blur_gauss(double sigma)
+{
+	assert(img.type() == CV_8UC1);
+	assert(3 * sigma >= 1);
+
+	auto gmat = get_gauss_matrix(sigma);
+
+	img = apply_mat(img, gmat);
 }
 
 } // namespace kit
