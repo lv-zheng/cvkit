@@ -286,4 +286,30 @@ void handle::equalize(int lo, int hi)
 		p[i] = limit0255(std::round((double) (p[i] - lo) / (hi - lo) * 255));
 }
 
+void handle::blur_avg(int radius)
+{
+	assert(img.type() == CV_8UC1);
+	assert(radius >= 0);
+
+	cv::Mat dst = img.clone();
+	long area = (long) (radius * 2 + 1) * (radius * 2 + 1);
+
+	for (int i = 0; i < img.rows; ++i) {
+		long sum = 0;
+		for (int x = -radius; x <= radius; ++x)
+			for (int y = -radius - 1; y < radius; ++y)
+				sum += at_ranged_scale(img, i + x, y);
+
+		for (int j = 0; j < img.cols; ++j) {
+			for (int x = -radius; x <= radius; ++x) {
+				sum += at_ranged_scale(img, i + x, j + radius);
+				sum -= at_ranged_scale(img, i + x, j - radius - 1);
+			}
+			dst.at<uchar>(i, j) = limit0255(std::round((double) sum / area));
+		}
+	}
+
+	img = dst;
+}
+
 } // namespace kit

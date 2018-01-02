@@ -40,6 +40,8 @@ struct handle {
 
 	void equalize(int lo, int hi);
 
+	void blur_avg(int radius);
+
 	cv::Mat img;
 };
 
