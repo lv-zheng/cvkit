@@ -41,6 +41,8 @@ struct handle {
 	void equalize(int lo, int hi);
 
 	void blur_avg(int radius);
+	void blur_med(int radius);
+	void blur_gauss(double sigma);
 
 	cv::Mat img;
 };

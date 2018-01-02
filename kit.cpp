@@ -1,4 +1,5 @@
 #include <cmath>
+#include <deque>
 #include <vector>
 
 #include "kit.hpp"
@@ -306,6 +307,81 @@ void handle::blur_avg(int radius)
 				sum -= at_ranged_scale(img, i + x, j - radius - 1);
 			}
 			dst.at<uchar>(i, j) = limit0255(std::round((double) sum / area));
+		}
+	}
+
+	img = dst;
+}
+
+void handle::blur_med(int radius)
+{
+	assert(img.type() == CV_8UC1);
+	assert(radius >= 0);
+
+	cv::Mat dst = img.clone();
+	long area = (long) (radius * 2 + 1) * (radius * 2 + 1);
+	int med = area / 2;
+
+	std::vector<uchar> buf(area);
+	for (int i = 0; i < img.rows; ++i) {
+		std::deque<uchar> q;
+		for (int x = -radius; x <= radius; ++x)
+			for (int y = -radius - 1; y < radius; ++y)
+				q.push_back(at_ranged_scale(img, i + x, y));
+
+		for (int j = 0; j < img.cols; ++j) {
+			for (int x = -radius; x <= radius; ++x) {
+				q.push_back(at_ranged_scale(img, i + x, j + radius));
+				q.pop_front();
+			}
+			assert((long) q.size() == area);
+			std::copy(q.begin(), q.end(), buf.begin());
+			std::nth_element(buf.begin(), buf.begin() + med, buf.end());
+			dst.at<uchar>(i, j) = buf[med];
+		}
+	}
+
+	img = dst;
+}
+
+static std::vector<std::vector<double>> get_gauss_matrix(double sigma)
+{
+	// 3-sigma rule
+	int radius = std::ceil(sigma * 3);
+	int diam = 2 * radius + 1;
+	std::vector<std::vector<double>> res(diam, std::vector<double>(diam));
+
+	double pi = 2 * std::acos(0);
+	double sigma2 = sigma * sigma;
+
+	for (int i = -radius; i <= radius; ++i) {
+		for (int j = -radius; j <= radius; ++j) {
+			res[i + radius][j + radius] =
+				std::exp(-(i * i + j * j) / (2 * sigma2)) /
+				(2 * pi * sigma2);
+		}
+	}
+
+	return res;
+}
+
+void handle::blur_gauss(double sigma)
+{
+	assert(img.type() == CV_8UC1);
+	assert(3 * sigma >= 1);
+
+	cv::Mat dst = img.clone();
+
+	auto gmat = get_gauss_matrix(sigma);
+	int radius = gmat.size() / 2;
+
+	for (int i = 0; i < img.rows; ++i) {
+		for (int j = 0; j < img.cols; ++j) {
+			double value = 0;
+			for (int x = -radius; x <= radius; ++x)
+				for (int y = -radius; y <= radius; ++y)
+					value += gmat[x + radius][y + radius] * at_ranged_scale(img, i + x, j + y);
+			dst.at<uchar>(i, j) = limit0255(std::round(value));
 		}
 	}
 
