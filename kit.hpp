@@ -27,6 +27,11 @@ struct handle {
 
 	void to_gray(char method);
 	uchar otsu();
+	void add(cv::Mat rhs);
+	void sub(cv::Mat rhs);
+	void mul(cv::Mat rhs);
+
+	cv::Mat histogram2img(unsigned height = 256);
 
 	cv::Mat img;
 };

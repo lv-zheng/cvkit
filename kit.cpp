@@ -10,6 +10,11 @@ static inline double limit01(double v)
 	return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
+static inline uchar limit0255(int v)
+{
+	return v < 0 ? 0 : v > 255 ? 255 : v;
+}
+
 static std::vector<unsigned> histogram(const cv::Mat img)
 {
 	assert(img.type() == CV_8UC1);
@@ -117,6 +122,80 @@ uchar handle::otsu()
 	img = threshold(img, thres);
 
 	return thres;
+}
+
+static cv::Mat matsize2(cv::Mat a, cv::Mat b)
+{
+	assert(a.type() == b.type());
+	auto cols = std::min(a.cols, b.cols);
+	auto rows = std::min(a.rows, b.rows);
+	return cv::Mat(cv::Size(cols, rows), a.type());
+}
+
+void handle::add(cv::Mat rhs)
+{
+	assert(img.type() == CV_8UC1);
+
+	cv::Mat dst = matsize2(img, rhs);
+	for (int i = 0; i < dst.rows; ++i) {
+		for (int j = 0; j < dst.cols; ++j) {
+			int value = (int) img.at<uchar>(i, j) +
+					(int) rhs.at<uchar>(i, j);
+			dst.at<uchar>(i, j) = limit0255(value);
+		}
+	}
+
+	img = dst;
+}
+
+void handle::sub(cv::Mat rhs)
+{
+	assert(img.type() == CV_8UC1);
+
+	cv::Mat dst = matsize2(img, rhs);
+	for (int i = 0; i < dst.rows; ++i) {
+		for (int j = 0; j < dst.cols; ++j) {
+			int value = (int) img.at<uchar>(i, j) -
+					(int) rhs.at<uchar>(i, j);
+			dst.at<uchar>(i, j) = limit0255(value);
+		}
+	}
+
+	img = dst;
+}
+
+void handle::mul(cv::Mat rhs)
+{
+	assert(img.type() == CV_8UC1);
+
+	cv::Mat dst = matsize2(img, rhs);
+	for (int i = 0; i < dst.rows; ++i) {
+		for (int j = 0; j < dst.cols; ++j) {
+			double value = (double) img.at<uchar>(i, j) *
+					(double) rhs.at<uchar>(i, j) /
+					256.0;
+			dst.at<uchar>(i, j) = limit0255(std::round(value));
+		}
+	}
+
+	img = dst;
+}
+
+cv::Mat handle::histogram2img(unsigned height)
+{
+	assert(img.type() == CV_8UC1);
+
+	cv::Mat res(cv::Size(256, height), CV_8UC1);
+	auto his = histogram(img);
+	auto mx = *std::max_element(his.begin(), his.end());
+	for (int i = 0; i < 256; ++i) {
+		unsigned h = (unsigned long)
+				his[i] * height / mx;
+		for (unsigned j = 0; j < height; ++j)
+			res.at<uchar>(height - 1 - j, i) = (j < h ? 0 : 255);
+	}
+
+	return res;
 }
 
 } // namespace kit
