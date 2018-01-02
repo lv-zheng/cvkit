@@ -3,7 +3,7 @@
 int main(int argc, char **argv)
 {
 	if (argc < 5) {
-		kit::usage(argv[0], "<add|sub|mul> <file2>");
+		kit::usage(argv[0], "<add|sub|mul|triangle> <file2>");
 		return 1;
 	}
 
@@ -19,6 +19,9 @@ int main(int argc, char **argv)
 		break;
 	case 'm':
 		img.mul(jmg.img);
+		break;
+	case 't':
+		img.triangle(jmg.img);
 		break;
 	default:
 		throw std::runtime_error("unknown arithmetic operation");
