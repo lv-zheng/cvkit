@@ -7,7 +7,7 @@ all: cvcolor2gray cvthreshold_otsu cvarith cvhistogram \
 		cvscale cvequal \
 		cvblur cvedge \
 		cvshow \
-		cvbinmorph
+		cvbinmorph cvgraymorph
 
 cvcolor2gray: cvcolor2gray.o kit.o
 
@@ -28,3 +28,5 @@ cvedge: cvedge.o kit.o
 cvshow: cvshow.o kit.o
 
 cvbinmorph: cvbinmorph.o kit.o
+
+cvgraymorph: cvgraymorph.o kit.o

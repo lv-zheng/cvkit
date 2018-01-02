@@ -53,6 +53,9 @@ struct handle {
 	void bin_erode(const cv::Mat& rhs);
 	void bin_dilate(const cv::Mat& rhs);
 
+	void gmorph_erode(int radius);
+	void gmorph_dilate(int radius);
+
 	cv::Mat img;
 };
 

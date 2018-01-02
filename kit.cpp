@@ -571,6 +571,8 @@ void handle::edge_canny(double thres)
 
 void handle::bin_erode(const cv::Mat& rhs)
 {
+	assert(img.type() == CV_8UC1);
+
 	if (img.rows < rhs.rows || img.cols < rhs.cols)
 		throw std::runtime_error("too small image for erosion");
 
@@ -597,8 +599,7 @@ finish:
 
 void handle::bin_dilate(const cv::Mat& rhs)
 {
-	if (img.rows < rhs.rows || img.cols < rhs.cols)
-		throw std::runtime_error("too small image for erosion");
+	assert(img.type() == CV_8UC1);
 
 	cv::Mat dst(cv::Size(img.cols + rhs.cols - 1, img.rows + rhs.rows - 1), CV_8UC1);
 
@@ -615,6 +616,59 @@ void handle::bin_dilate(const cv::Mat& rhs)
 				for (int y = 0; y < rhs.cols; ++y) {
 					if (rhs.at<uchar>(x, y))
 						dst.at<uchar>(i + x, j + y) = 255;
+				}
+			}
+		}
+	}
+
+	img = dst;
+}
+
+void handle::gmorph_erode(int radius)
+{
+	assert(img.type() == CV_8UC1);
+
+	int diagram = 2 * radius + 1;
+
+	if (img.rows < diagram || img.cols < diagram)
+		throw std::runtime_error("too small image for erosion");
+
+	cv::Mat dst(cv::Size(img.cols - 2 * radius, img.rows - 2 * radius), CV_8UC1);
+
+	for (int i = 0; i < dst.rows; ++i) {
+		for (int j = 0; j < dst.cols; ++j) {
+			uchar m = 255;
+			for (int x = 0; x < diagram; ++x) {
+				for (int y = 0; y < diagram; ++y)
+					m = std::min(m, img.at<uchar>(i + x, j + y));
+			}
+			dst.at<uchar>(i, j) = m;
+		}
+	}
+
+	img = dst;
+}
+
+void handle::gmorph_dilate(int radius)
+{
+	assert(img.type() == CV_8UC1);
+
+	int diagram = 2 * radius + 1;
+
+	cv::Mat dst(cv::Size(img.cols + 2 * radius, img.rows + 2 * radius), CV_8UC1);
+
+	for (int i = 0; i < dst.rows; ++i) {
+		for (int j = 0; j < dst.cols; ++j)
+			dst.at<uchar>(i, j) = 0;
+	}
+
+	for (int i = 0; i < img.rows; ++i) {
+		for (int j = 0; j < img.cols; ++j) {
+			uchar cur = img.at<uchar>(i, j);
+			for (int x = 0; x < diagram; ++x) {
+				for (int y = 0; y < diagram; ++y) {
+					auto& pxl = dst.at<uchar>(i + x, j + y);
+					pxl = std::max(pxl, cur);
 				}
 			}
 		}
