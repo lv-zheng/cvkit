@@ -5,7 +5,7 @@ CXX=g++
 
 all: cvcolor2gray cvthreshold_otsu cvarith cvhistogram \
 		cvscale cvequal \
-		cvblur
+		cvblur cvedge
 
 cvcolor2gray: cvcolor2gray.o kit.o
 
@@ -20,3 +20,5 @@ cvscale: cvscale.o kit.o
 cvequal: cvequal.o kit.o
 
 cvblur: cvblur.o kit.o
+
+cvedge: cvedge.o kit.o

@@ -174,8 +174,24 @@ void handle::mul(cv::Mat rhs)
 		for (int j = 0; j < dst.cols; ++j) {
 			double value = (double) img.at<uchar>(i, j) *
 					(double) rhs.at<uchar>(i, j) /
-					256.0;
+					255.0;
 			dst.at<uchar>(i, j) = limit0255(std::round(value));
+		}
+	}
+
+	img = dst;
+}
+
+void handle::triangle(cv::Mat rhs)
+{
+	assert(img.type() == CV_8UC1);
+
+	cv::Mat dst = matsize2(img, rhs);
+	for (int i = 0; i < dst.rows; ++i) {
+		for (int j = 0; j < dst.cols; ++j) {
+			double x = (double) img.at<uchar>(i, j) / 255;
+			double y = (double) rhs.at<uchar>(i, j) / 255;
+			dst.at<uchar>(i, j) = limit0255(std::round(std::sqrt(x * x + y * y) * 255));
 		}
 	}
 
@@ -393,6 +409,38 @@ void handle::blur_gauss(double sigma)
 	auto gmat = get_gauss_matrix(sigma);
 
 	img = apply_mat(img, gmat);
+}
+
+void handle::edge_sobel()
+{
+	assert(img.type() == CV_8UC1);
+
+	std::vector<std::vector<double>> gx = {
+		{-1, 0, 1},
+		{-2, 0, 2},
+		{-1, 0, 1},
+	};
+
+	std::vector<std::vector<double>> gy = {
+		{1, 2, 1},
+		{0, 0, 0},
+		{-1, -2, -1},
+	};
+
+	auto imgx = apply_mat(img, gx);
+	auto imgy = apply_mat(img, gy);
+	img = imgx;
+	triangle(imgy);
+}
+
+void handle::edge_laplacian()
+{
+	// TODO
+}
+
+void handle::edge_neglap()
+{
+	// TODO
 }
 
 } // namespace kit

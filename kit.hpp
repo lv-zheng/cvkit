@@ -33,6 +33,7 @@ struct handle {
 	void add(cv::Mat rhs);
 	void sub(cv::Mat rhs);
 	void mul(cv::Mat rhs);
+	void triangle(cv::Mat rhs);
 
 	cv::Mat histogram2img(unsigned height = 256);
 
@@ -43,6 +44,10 @@ struct handle {
 	void blur_avg(int radius);
 	void blur_med(int radius);
 	void blur_gauss(double sigma);
+
+	void edge_sobel();
+	void edge_laplacian();
+	void edge_neglap();
 
 	cv::Mat img;
 };
