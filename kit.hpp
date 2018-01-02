@@ -5,6 +5,9 @@
 
 #include <opencv2/opencv.hpp>
 
+#define whassert(x) do { if (!(x)) \
+	{ throw std::runtime_error("invalid size"); } } while (0)
+
 namespace kit {
 
 struct handle {
@@ -32,6 +35,8 @@ struct handle {
 	void mul(cv::Mat rhs);
 
 	cv::Mat histogram2img(unsigned height = 256);
+
+	void scale(double cols, double rows, bool bilinear);
 
 	cv::Mat img;
 };

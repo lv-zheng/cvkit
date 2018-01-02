@@ -198,4 +198,82 @@ cv::Mat handle::histogram2img(unsigned height)
 	return res;
 }
 
+static uchar at_ranged_scale(const cv::Mat &img, int x, int y)
+{
+	if (x < 0)
+		x = 0;
+	if (x >= img.rows)
+		x = img.rows - 1;
+	if (y < 0)
+		y = 0;
+	if (y >= img.cols)
+		y = img.cols - 1;
+	return img.at<uchar>(x, y);
+}
+
+static uchar at_ranged(const cv::Mat &img, int x, int y)
+{
+	if (x < 0 || x >= img.rows ||
+			y < 0 || y >= img.cols)
+		return 0;
+	return img.at<uchar>(x, y);
+}
+
+static uchar pick_nearest(const cv::Mat& img, double x, double y)
+{
+	assert(img.type() == CV_8UC1);
+	x *= img.rows;
+	y *= img.cols;
+	//std::cout << x << ' ' << y << std::endl;
+
+	return at_ranged_scale(img, std::floor(x), std::floor(y));
+}
+
+static uchar pick_bilinear(const cv::Mat& img, double x, double y)
+{
+	assert(img.type() == CV_8UC1);
+	x = x * img.rows - 0.5;
+	y = y * img.cols - 0.5;
+	int i = std::floor(x);
+	int j = std::floor(y);
+	double di = x - i;
+	double dj = y - j;
+	//std::cout << i << j << ' ' << di << ' ' << dj << std::endl;
+
+	double v1 = at_ranged_scale(img, i, j) * (1 - di) +
+		at_ranged_scale(img, i + 1, j) * di;
+	double v2 = at_ranged_scale(img, i, j + 1) * (1 - di) +
+		at_ranged_scale(img, i + 1, j + 1) * di;
+	double v = v1 * (1 - dj) + v2 * dj;
+
+	return limit0255(std::round(v));
+}
+
+void handle::scale(double cols, double rows, bool bilinear)
+{
+	assert(img.type() == CV_8UC1);
+	assert(cols >= 1);
+	assert(rows >= 1);
+
+	cv::Mat dst(cv::Size(std::ceil(cols), std::ceil(rows)), CV_8UC1);
+
+	std::function<uchar(const cv::Mat&, double, double)> pick;
+	if (bilinear)
+		pick = pick_bilinear;
+	else
+		pick = pick_nearest;
+
+	for (int i = 0; i < dst.rows; ++i) {
+		for (int j = 0; j < dst.cols; ++j) {
+			double x = i + 0.5;
+			double y = j + 0.5;
+			dst.at<uchar>(i, j) = pick(img,
+					x / dst.rows,
+					y / dst.cols);
+		}
+	}
+
+	img = dst;
+}
+
 } // namespace kit
