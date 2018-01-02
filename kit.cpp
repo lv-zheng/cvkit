@@ -367,7 +367,7 @@ static std::vector<std::vector<double>> get_gauss_matrix(double sigma)
 	int diam = 2 * radius + 1;
 	std::vector<std::vector<double>> res(diam, std::vector<double>(diam));
 
-	double pi = 2 * std::acos(0);
+	double pi = 2 * std::acos(0.0);
 	double sigma2 = sigma * sigma;
 
 	for (int i = -radius; i <= radius; ++i) {
@@ -411,9 +411,26 @@ void handle::blur_gauss(double sigma)
 	img = apply_mat(img, gmat);
 }
 
-void handle::edge_sobel()
+auto sobel_real(const cv::Mat& img)
 {
 	assert(img.type() == CV_8UC1);
+
+	cv::Mat dst = img.clone();
+
+	auto fsobel = [](const auto& img, const auto& mat) {
+		int radius = mat.size() / 2;
+		std::vector<std::vector<double>> dst(img.rows, std::vector<double>(img.cols));
+		for (int i = 0; i < img.rows; ++i) {
+			for (int j = 0; j < img.cols; ++j) {
+				double value = 0;
+				for (int x = -radius; x <= radius; ++x)
+					for (int y = -radius; y <= radius; ++y)
+						value += mat[x + radius][y + radius] * at_ranged_scale(img, i + x, j + y) / 255;
+				dst[i][j] = value;
+			}
+		}
+		return dst;
+	};
 
 	std::vector<std::vector<double>> gx = {
 		{-1, 0, 1},
@@ -427,20 +444,130 @@ void handle::edge_sobel()
 		{-1, -2, -1},
 	};
 
-	auto imgx = apply_mat(img, gx);
-	auto imgy = apply_mat(img, gy);
-	img = imgx;
-	triangle(imgy);
+	auto imgx = fsobel(img, gx);
+	auto imgy = fsobel(img, gy);
+
+	std::vector<std::vector<std::pair<double, double>>> res(img.rows,
+			std::vector<std::pair<double, double>>(img.cols));
+
+	for (int i = 0; i < img.rows; ++i) {
+		for (int j = 0; j < img.cols; ++j) {
+			res[i][j].first = std::sqrt(imgx[i][j] * imgx[i][j] + imgy[i][j] * imgy[i][j]);
+			res[i][j].second = std::atan2(imgy[i][j], imgx[i][j]);
+		}
+	}
+
+	return res;
+}
+
+void handle::edge_sobel()
+{
+	assert(img.type() == CV_8UC1);
+
+	auto dat = sobel_real(img);
+
+	for (int i = 0; i < img.rows; ++i) {
+		for (int j = 0; j < img.cols; ++j)
+			img.at<uchar>(i, j) = limit0255(dat[i][j].first * 255);
+	}
 }
 
 void handle::edge_laplacian()
 {
-	// TODO
+	assert(img.type() == CV_8UC1);
+
+	std::vector<std::vector<double>> lap = {
+		{0, -1, 0},
+		{-1, 4, -1},
+		{0, -1, 0},
+	};
+
+	img = apply_mat(img, lap);
 }
 
 void handle::edge_neglap()
 {
-	// TODO
+	assert(img.type() == CV_8UC1);
+
+	std::vector<std::vector<double>> nlap = {
+		{0, 1, 0},
+		{1, -4, 1},
+		{0, 1, 0},
+	};
+
+	img = apply_mat(img, nlap);
+}
+
+void handle::edge_canny(double thres)
+{
+	assert(img.type() == CV_8UC1);
+
+	auto dat = sobel_real(img);
+
+	double pi8 = acos(0.0) / 4;
+	for (int i = 0; i < img.rows; ++i) {
+		for (int j = 0; j < img.cols; ++j) {
+			if (dat[i][j].first < thres)
+				dat[i][j].first = 0;
+		}
+	}
+
+	int pos1x, pos1y, pos2x, pos2y;
+
+	cv::Mat res(cv::Size(img.cols, img.rows), CV_8UC1);
+
+	for (int i = 0; i < img.rows; ++i) {
+		for (int j = 0; j < img.cols; ++j) {
+			res.at<uchar>(i, j) = 0;
+
+			if (!(dat[i][j].first > 0))
+				continue;
+
+			double angle = dat[i][j].second;
+			if (angle > 4 * pi8)
+				angle -= 8 * pi8;
+			if (angle < -4 * pi8)
+				angle += 8 * pi8;
+			std::cout << angle << std::endl;
+			if (angle <= -3 * pi8 || angle > 3 * pi8) {
+				pos1x = i + 1;
+				pos2x = i - 1;
+				pos1y = pos2y = j;
+			} else if (angle > pi8) {
+				pos1x = i + 1;
+				pos1y = j - 1;
+				pos2x = i - 1;
+				pos2y = j + 1;
+			} else if (angle <= -pi8) {
+				pos1x = i + 1;
+				pos1y = j + 1;
+				pos2x = i - 1;
+				pos2y = j - 1;
+			} else {
+				pos1y = j + 1;
+				pos2y = j - 1;
+				pos1x = pos2x = i;
+			}
+
+			double val1, val2;
+			if (pos1x < 0 || pos1x >= img.rows ||
+					pos1y < 0 || pos1y >= img.cols)
+				continue;
+			else
+				val1 = dat[pos1x][pos1y].first;
+
+			if (pos2x < 0 || pos2x >= img.rows ||
+					pos2y < 0 || pos2y >= img.cols)
+				continue;
+			else
+				val2 = dat[pos2x][pos2y].first;
+
+			if (dat[i][j].first > val1 && dat[i][j].first > val2)
+				res.at<uchar>(i, j) = 255;
+		}
+	}
+
+	img = res;
 }
 
 } // namespace kit

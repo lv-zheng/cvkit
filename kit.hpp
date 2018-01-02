@@ -48,6 +48,7 @@ struct handle {
 	void edge_sobel();
 	void edge_laplacian();
 	void edge_neglap();
+	void edge_canny(double thres);
 
 	cv::Mat img;
 };
