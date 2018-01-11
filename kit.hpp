@@ -30,6 +30,7 @@ struct handle {
 
 	void to_gray(char method);
 	uchar otsu();
+	void threshold(int lo, int hi);
 	void add(cv::Mat rhs);
 	void sub(cv::Mat rhs);
 	void mul(cv::Mat rhs);

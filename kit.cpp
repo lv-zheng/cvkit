@@ -26,13 +26,13 @@ static std::vector<unsigned> histogram(const cv::Mat img)
 	return his;
 }
 
-static cv::Mat threshold(const cv::Mat img, uchar thres)
+static cv::Mat threshold_(const cv::Mat img, uchar lo, uchar hi)
 {
 	assert(img.type() == CV_8UC1);
 	cv::Mat dst = img.clone();
 	uchar *p = dst.data;
 	for (int i = 0; i < img.cols * img.rows; ++i)
-		p[i] = p[i] > thres ? 255 : 0;
+		p[i] = (p[i] <= lo ? 0 : p[i] > hi ? 255 : p[i]);
 	return dst;
 }
 
@@ -120,9 +120,16 @@ uchar handle::otsu()
 
 	//cv::Mat dst = img.clone();
 	//cv::threshold(img, dst, thres, 255, cv::THRESH_BINARY);
-	img = threshold(img, thres);
+	img = threshold_(img, thres, thres);
 
 	return thres;
+}
+
+void handle::threshold(int lo, int hi)
+{
+	assert(img.type() == CV_8UC1);
+
+	img = threshold_(img, lo, hi);
 }
 
 static cv::Mat matsize2(cv::Mat a, cv::Mat b)

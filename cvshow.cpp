@@ -10,7 +10,7 @@ int main(int argc, char **argv)
 	kit::handle img(argv[1], cv::IMREAD_COLOR);
 
 	std::string fn(argv[1]);
-	cv::namedWindow(fn, cv::WINDOW_NORMAL);
+	cv::namedWindow(fn, cv::WINDOW_AUTOSIZE);
 	cv::imshow(fn, img.img);
 
 	cv::waitKey();

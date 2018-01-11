@@ -47,6 +47,7 @@ class CVkit(tkinter.Frame):
 
         thresmenu = tkinter.Menu(menubar)
         thresmenu.add_command(label="Otsu", command=self.onOtsu)
+        thresmenu.add_command(label="Manual (lo,hi)", command=self.onThres)
 
         arithmenu = tkinter.Menu(menubar)
         arithmenu.add_command(label="add", command=self.onAdd)
@@ -204,6 +205,14 @@ class CVkit(tkinter.Frame):
 
     def onOtsu(self):
         self.do_and_switch(["cvthreshold_otsu"])
+
+    def onThres(self):
+        lo = self.scale_lo.get()
+        hi = self.scale_hi.get()
+        if lo < 0 or lo > hi or hi > 255:
+            self.showerr("lo and hi are not in range ([0, 255], lo <= hi)")
+            return
+        self.do_and_switch(["cvthreshold", str(lo), str(hi)])
 
     def onAdd(self):
         self.arith('a')
