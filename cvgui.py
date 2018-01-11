@@ -53,6 +53,7 @@ class CVkit(tkinter.Frame):
         arithmenu.add_command(label="add", command=self.onAdd)
         arithmenu.add_command(label="subtract", command=self.onSub)
         arithmenu.add_command(label="multiply", command=self.onMul)
+        arithmenu.add_command(label="triangle", command=self.onTri)
 
         scalemenu = tkinter.Menu(menubar)
         scalemenu.add_command(label="nearest neighbor (scale x)", command=self.onScale_nn)
@@ -220,6 +221,8 @@ class CVkit(tkinter.Frame):
         self.arith('s')
     def onMul(self):
         self.arith('m')
+    def onTri(self):
+        self.arith('t')
 
     def onScale_nn(self):
         x = self.scale_x.get()
