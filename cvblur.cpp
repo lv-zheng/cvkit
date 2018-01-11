@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 	double sigma = atof(argv[4]);
 	char method = argv[3][0];
 
-	if (radius < 0 || radius > 16 || (method == 'g' && (sigma < 0.5 || sigma > 5)))
+	if (radius < 0 || radius > 16 || (method == 'g' && (sigma < 0.5 || sigma > 8)))
 		throw std::runtime_error("radius/sigma out of range");
 
 	switch (method) {
